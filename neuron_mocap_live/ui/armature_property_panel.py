@@ -14,16 +14,61 @@ class ArmaturePropertyPanel(bpy.types.Panel):
     def draw(self, ctx):
         layout = self.layout
         col = layout.column()
+        row = col.row(align=True)
 
-        if ctx.scene.neuron_mocap_live_recording:
+        if ctx.scene.nml_recording:
+            row.label(text = 'Drive Type')
+            row.label(text = ctx.active_object.nml_drive_type)
+        else:
+            row.label(text = 'Drive Type')
+            row.prop(ctx.active_object, 'nml_drive_type', text = '')
+
+        if ctx.active_object.nml_drive_type == 'DIRECT':
+            self.draw_direct_drive_settings(ctx)
+        else:
+            self.draw_retarget_drive_settings(ctx)
+
+
+    def draw_direct_drive_settings(self, ctx):
+        layout = self.layout
+        col = layout.column()
+
+        if ctx.scene.nml_recording:
             row = col.row(align = True)
             row.label(text='Character Name')
-            row.label(text=ctx.active_object.neuron_mocap_live_chr_name)
+            row.label(text=ctx.active_object.nml_chr_name)
         else:
             row = col.row(align = True)
             row.label(text='Live')
-            row.prop(ctx.active_object, 'neuron_mocap_live_active', text = '')
+            row.prop(ctx.active_object, 'nml_active', text = '')
 
             row = col.row(align = True)
             row.label(text='Character Name')
-            row.prop(ctx.active_object, 'neuron_mocap_live_chr_name', text = '')
+            row.prop(ctx.active_object, 'nml_chr_name', text = '')
+
+    def draw_retarget_drive_settings(self, ctx):
+        layout = self.layout
+        col = layout.column()
+
+        row = col.row(align = True)
+        row.label(text='Live')
+        row.prop(ctx.active_object, 'nml_active', text = '')
+
+        row = col.row(align = True)
+        row.operator('neuron_mocap_live.mark_tpose', text = 'Mark T-Pose', icon='OUTLINER_DATA_ARMATURE')
+        row.operator('neuron_mocap_live.set_tpose', text = 'Set T-Pose', icon='ARMATURE_DATA')
+
+        row = col.row()
+        row.label(text='Source')
+        row.prop_search(ctx.active_object, 'nml_source_armature', ctx.scene, 'objects', text='')
+
+        source = bpy.data.objects.get(ctx.active_object.nml_source_armature)
+        if source and source.type == 'ARMATURE':
+            col = layout.column()
+            row = col.row()
+            row.operator('neuron_mocap_live.auto_map_bone', text = 'Auto Detect', icon='BONE_DATA')
+
+            for bone in ctx.active_object.pose.bones:
+                row = col.row()
+                row.label(text = bone.name)
+                row.prop_search(bone, 'nml_source_bone', source.pose, 'bones', text='')

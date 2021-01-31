@@ -95,14 +95,50 @@ def record_frame(ctx, obj):
             continue
         bone_data.append((mocap_timer.time_delta, Vector(bone.location), Quaternion(bone.rotation_quaternion), Vector(bone.scale)))
 
+def animate_armatures_indirect(ctx, source_obj):
+    for target_obj in bpy.data.objects:
+        if not target_obj.nml_active:
+            continue
+        if target_obj.type == 'ARMATURE' and target_obj.nml_source_armature == source_obj.name:
+            for target_pose_bone in target_obj.pose.bones: 
+                source_pose_bone = source_obj.pose.bones.get(target_pose_bone.nml_source_bone)
+                if not source_pose_bone:
+                    continue
+                target_pose_bone.bone.inherit_scale = 'NONE'
+                if target_pose_bone.rotation_mode != 'QUATERNION':
+                    target_pose_bone.rotation_mode = 'QUATERNION'
+
+                target_matrix_tpose = Matrix.Identity(4)
+                target_matrix_tpose[0][0:4] = target_pose_bone.nml_matrix_tpose[0:4]
+                target_matrix_tpose[1][0:4] = target_pose_bone.nml_matrix_tpose[4:8]
+                target_matrix_tpose[2][0:4] = target_pose_bone.nml_matrix_tpose[8:12]
+                target_matrix_tpose[3][0:4] = target_pose_bone.nml_matrix_tpose[12:16]
+
+                target_matrix_basis_tpose = Matrix.Identity(4)
+                target_matrix_basis_tpose[0][0:4] = target_pose_bone.nml_matrix_basis_tpose[0:4]
+                target_matrix_basis_tpose[1][0:4] = target_pose_bone.nml_matrix_basis_tpose[4:8]
+                target_matrix_basis_tpose[2][0:4] = target_pose_bone.nml_matrix_basis_tpose[8:12]
+                target_matrix_basis_tpose[3][0:4] = target_pose_bone.nml_matrix_basis_tpose[12:16]
+
+                target_matrix_world_tpose = target_matrix_tpose.inverted() @ target_obj.matrix_world.inverted()
+                source_matrix_world_tpose = source_pose_bone.bone.matrix_local.inverted() @ source_obj.matrix_world.inverted()
+                matrix_source_to_target = target_matrix_world_tpose.to_quaternion().to_matrix() @ source_matrix_world_tpose.to_quaternion().to_matrix().inverted()
+
+                target_matrix_world = matrix_source_to_target.to_4x4() @ (source_pose_bone.matrix_basis @ source_matrix_world_tpose).to_quaternion().to_matrix().to_4x4()
+                target_pose_bone.matrix_basis = (target_matrix_world @ target_matrix_world_tpose.inverted()).to_quaternion().to_matrix().to_4x4() @ target_matrix_basis_tpose
+
+            if ctx.scene.nml_recording:
+                record_frame(ctx, target_obj)
+
 def animate_armatures(ctx, mcp_avatar):
     for obj in bpy.data.objects:
-        if not obj.neuron_mocap_live_active:
+        if not obj.nml_active:
             continue
-        if obj.type == 'ARMATURE' and obj.neuron_mocap_live_chr_name == mcp_avatar.get_name():
+        if obj.type == 'ARMATURE' and obj.nml_chr_name == mcp_avatar.get_name():
             animate_bone(ctx, obj, Vector(), Matrix(), False, mcp_avatar.get_root_joint())
-            if ctx.scene.neuron_mocap_live_recording:
+            if ctx.scene.nml_recording:
                 record_frame(ctx, obj)
+            animate_armatures_indirect(ctx, obj)
 
 def poll_data(ctx):
     mcp_evts = mocap_app.poll_next_event()
@@ -118,14 +154,14 @@ class MocapConnect(bpy.types.Operator):
     def execute(self, ctx):
         global mocap_timer
         settings = MCPSettings()
-        if ctx.scene.neuron_mocap_live_protocol == 'TCP':
-            settings.set_tcp(ctx.scene.neuron_mocap_live_ip, ctx.scene.neuron_mocap_live_port)
+        if ctx.scene.nml_protocol == 'TCP':
+            settings.set_tcp(ctx.scene.nml_ip, ctx.scene.nml_port)
         else:
-            settings.set_udp(ctx.scene.neuron_mocap_live_port)
+            settings.set_udp(ctx.scene.nml_port)
         mocap_app.set_settings(settings)
         status, msg = mocap_app.open()
         if status:
-            ctx.scene.neuron_mocap_live_living = True
+            ctx.scene.nml_living = True
         else:
             self.report({'ERROR'}, 'Connect failed: {0}'.format(msg))
         ctx.window_manager.modal_handler_add(self)
@@ -135,7 +171,7 @@ class MocapConnect(bpy.types.Operator):
     def modal(self, ctx, evt):
         if evt.type == 'TIMER':
             poll_data(ctx)
-        if not ctx.scene.neuron_mocap_live_living:
+        if not ctx.scene.nml_living:
             return {'FINISHED'}
         return {'PASS_THROUGH'}
 
@@ -145,7 +181,7 @@ class MocapDisconnect(bpy.types.Operator):
 
     def execute(self, ctx):
         global mocap_timer
-        ctx.scene.neuron_mocap_live_living = False
+        ctx.scene.nml_living = False
         status, msg = mocap_app.close()
         if not status:
             self.report({'ERROR'}, 'Disconnect failed: {0}'.format(msg))
@@ -160,7 +196,7 @@ class MocapStartRecord(bpy.types.Operator):
         global record_data
         record_data = dict()
         for obj in bpy.data.objects:
-            if not obj.neuron_mocap_live_active:
+            if not obj.nml_active:
                 continue
             if obj.type == 'ARMATURE':
                 bones_data = dict()
@@ -168,7 +204,7 @@ class MocapStartRecord(bpy.types.Operator):
                     bones_data[bone.name] = list()
                 record_data[obj.name] = bones_data
 
-        ctx.scene.neuron_mocap_live_recording = True
+        ctx.scene.nml_recording = True
         return {'FINISHED'}
 
 def save_animation_data(ctx, obj, bones_data):
@@ -233,9 +269,9 @@ class MocapStopRecord(bpy.types.Operator):
 
     def execute(self, ctx):
         global record_data
-        ctx.scene.neuron_mocap_live_recording = False
+        ctx.scene.nml_recording = False
         for obj in bpy.data.objects:
-            if not obj.neuron_mocap_live_active:
+            if not obj.nml_active:
                 continue
             bones_data = record_data.get(obj.name)
             if bones_data != None:

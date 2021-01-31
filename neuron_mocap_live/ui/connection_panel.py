@@ -11,36 +11,36 @@ class ConnectionPanel(bpy.types.Panel):
         layout = self.layout
         col = layout.column()
 
-        if not ctx.scene.neuron_mocap_live_living:
+        if not ctx.scene.nml_living:
             row = col.row(align=True)
             row.label(text = 'Protocol')
-            row.prop(ctx.scene, 'neuron_mocap_live_protocol', text = '')
+            row.prop(ctx.scene, 'nml_protocol', text = '')
 
-            if ctx.scene.neuron_mocap_live_protocol == 'TCP':
+            if ctx.scene.nml_protocol == 'TCP':
                 row = col.row(align=True)
                 row.label(text = 'IP')
-                row.prop(ctx.scene, 'neuron_mocap_live_ip', text = '')
+                row.prop(ctx.scene, 'nml_ip', text = '')
 
             row = col.row(align=True)
             row.label(text = 'Port')
-            row.prop(ctx.scene, 'neuron_mocap_live_port', text = '')
+            row.prop(ctx.scene, 'nml_port', text = '')
 
             row = col.row(align=True)
-            row.operator('neuron_mocap_live.connect')
+            row.operator('neuron_mocap_live.connect', icon='URL')
         else:
             row = col.row(align=True)
             row.label(text = 'Protocol')
-            row.label(text = ctx.scene.neuron_mocap_live_protocol)
+            row.label(text = ctx.scene.nml_protocol)
 
-            if ctx.scene.neuron_mocap_live_protocol == 'TCP':
+            if ctx.scene.nml_protocol == 'TCP':
                 row = col.row(align=True)
                 row.label(text = 'IP')
-                row.label(text = ctx.scene.neuron_mocap_live_ip)
+                row.label(text = ctx.scene.nml_ip)
 
             row = col.row(align=True)
             row.label(text = 'Port')
-            row.label(text = str(ctx.scene.neuron_mocap_live_port))
+            row.label(text = str(ctx.scene.nml_port))
 
-            if not ctx.scene.neuron_mocap_live_recording:
+            if not ctx.scene.nml_recording:
                 row = col.row(align=True)
-                row.operator('neuron_mocap_live.disconnect')
+                row.operator('neuron_mocap_live.disconnect', icon='MOD_WAVE')

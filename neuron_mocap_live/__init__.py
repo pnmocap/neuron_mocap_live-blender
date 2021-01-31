@@ -22,6 +22,9 @@ class_list = [
     ops.MocapDisconnect,
     ops.MocapStartRecord,
     ops.MocapStopRecord,
+    ops.MarkTPose,
+    ops.SetTPose,
+    ops.AutoMapBone,
     ui.ConnectionPanel,
     ui.ArmaturePropertyPanel,
     ui.RecordPanel

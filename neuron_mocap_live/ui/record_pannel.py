@@ -9,15 +9,15 @@ class RecordPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, ctx):
-        return ctx.scene.neuron_mocap_live_living
+        return ctx.scene.nml_living
 
     def draw(self, ctx):
         layout = self.layout
         col = layout.column()
 
-        if not ctx.scene.neuron_mocap_live_recording:
+        if not ctx.scene.nml_recording:
             row = col.row(align=True)
-            row.operator('neuron_mocap_live.start_record')
+            row.operator('neuron_mocap_live.start_record', icon='REC')
         else:
             row = col.row(align=True)
-            row.operator('neuron_mocap_live.stop_record')
+            row.operator('neuron_mocap_live.stop_record', icon='REC', depress=True)
