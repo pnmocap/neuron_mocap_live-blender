@@ -120,12 +120,42 @@ def animate_armatures_indirect(ctx, source_obj):
                 target_matrix_basis_tpose[2][0:4] = target_pose_bone.nml_matrix_basis_tpose[8:12]
                 target_matrix_basis_tpose[3][0:4] = target_pose_bone.nml_matrix_basis_tpose[12:16]
 
-                target_matrix_world_tpose = target_matrix_tpose.inverted() @ target_obj.matrix_world.inverted()
-                source_matrix_world_tpose = source_pose_bone.bone.matrix_local.inverted() @ source_obj.matrix_world.inverted()
-                matrix_source_to_target = target_matrix_world_tpose.to_quaternion().to_matrix() @ source_matrix_world_tpose.to_quaternion().to_matrix().inverted()
+                target_matrix_world_tpose = target_matrix_tpose.to_3x3().inverted() @ target_obj.matrix_world.to_3x3().inverted()
+                source_matrix_world_tpose = source_pose_bone.bone.matrix_local.to_3x3().inverted() @ source_obj.matrix_world.to_3x3().inverted()
+                matrix_source_to_target = target_matrix_world_tpose @ source_matrix_world_tpose.inverted()
 
-                target_matrix_world = matrix_source_to_target.to_4x4() @ (source_pose_bone.matrix_basis @ source_matrix_world_tpose).to_quaternion().to_matrix().to_4x4()
-                target_pose_bone.matrix_basis = (target_matrix_world @ target_matrix_world_tpose.inverted()).to_quaternion().to_matrix().to_4x4() @ target_matrix_basis_tpose
+                target_matrix_world = matrix_source_to_target.to_4x4() @ source_pose_bone.matrix_basis @ source_matrix_world_tpose.to_4x4()
+                target_pose_bone.matrix_basis = target_matrix_world @ target_matrix_world_tpose.to_4x4().inverted() @ target_matrix_basis_tpose
+
+                factor = 1
+                if source_pose_bone.name == 'Hips':
+                    target_pos = (target_matrix_tpose @ target_obj.matrix_world).to_translation() 
+                    target_pos = target_matrix_world_tpose.to_quaternion() @ target_pos
+                    scale = (target_matrix_tpose @ target_obj.matrix_world).to_scale()
+                    scale = target_matrix_world_tpose.to_quaternion() @ scale
+                    target_pos = target_pos * scale
+                    source_pos = (source_pose_bone.bone.matrix_local @ source_obj.matrix_world).to_translation()
+                    factor = target_pos.z / source_pos.z
+                else:
+                    target_pos = (target_matrix_tpose @ target_obj.matrix_world).to_translation() 
+                    target_parent_matrix_tpose = Matrix.Identity(4)
+                    target_parent_matrix_tpose[0][0:4] = target_pose_bone.parent.nml_matrix_tpose[0:4]
+                    target_parent_matrix_tpose[1][0:4] = target_pose_bone.parent.nml_matrix_tpose[4:8]
+                    target_parent_matrix_tpose[2][0:4] = target_pose_bone.parent.nml_matrix_tpose[8:12]
+                    target_parent_matrix_tpose[3][0:4] = target_pose_bone.parent.nml_matrix_tpose[12:16]
+                    scale = (target_parent_matrix_tpose @ target_obj.matrix_world).to_scale()
+                    target_pos = target_pos * scale
+                    target_parent_pos = (target_parent_matrix_tpose @ target_obj.matrix_world).to_translation() * scale
+                    target_len = (target_pos - target_parent_pos).length
+
+                    source_pos = (source_pose_bone.bone.matrix_local @ source_obj.matrix_world).to_translation()
+                    source_parent_pos = (source_pose_bone.bone.parent.matrix_local @ source_obj.matrix_world).to_translation()
+                    source_len = (source_pos - source_parent_pos).length
+                    factor = target_len / source_len
+
+                target_pose_bone.matrix_basis[0][3] = target_pose_bone.matrix_basis[0][3] * factor
+                target_pose_bone.matrix_basis[1][3] = target_pose_bone.matrix_basis[1][3] * factor
+                target_pose_bone.matrix_basis[2][3] = target_pose_bone.matrix_basis[2][3] * factor
 
             if ctx.scene.nml_recording:
                 record_frame(ctx, target_obj)
