@@ -737,6 +737,7 @@ class MCPApplication(object):
         err = self.api.contents.CreateApplication(pointer(self._handle))
         if err != MCPError.NoError:
             raise RuntimeError('Can not create application: {0}'.format(MCPError._fields[err]))
+        self._is_opened = False
     
     def __del__(self):
         err = self.api.contents.DestroyApplication(self._handle)
@@ -755,7 +756,11 @@ class MCPApplication(object):
 
     def open(self):
         err = self.api.contents.OpenApplication(self._handle)
+        self._is_opened = (err == MCPError.NoError)
         return err == MCPError.NoError, MCPError._fields[err]
+
+    def is_opened(self):
+        return self._is_opened
     
     def enable_event_cache(self):
         err = self.api.contents.EnableApplicationCacheEvents(self._handle)
@@ -774,6 +779,7 @@ class MCPApplication(object):
 
     def close(self):
         err = self.api.contents.CloseApplication(self._handle)
+        self._is_opened = False
         return err == MCPError.NoError, MCPError._fields[err]
 
     def get_rigid_bodies(self):

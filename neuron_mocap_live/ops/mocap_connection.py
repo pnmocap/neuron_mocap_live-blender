@@ -3,19 +3,29 @@ from mathutils import Vector, Matrix, Quaternion, Euler
 from ..mocap_api import *
 import math
 
-mocap_app = MCPApplication()
-render_settings = MCPRenderSettings()
-render_settings.set_up_vector(MCPUpVector.ZAxis, 1)
-render_settings.set_coord_system(MCPCoordSystem.RightHanded)
-render_settings.set_front_vector(MCPFrontVector.ParityEven, -1)
-render_settings.set_rotating_direction(MCPRotatingDirection.CounterClockwise)
-render_settings.set_unit(MCPUnit.Meter)
-mocap_app.set_render_settings(render_settings)
+mocap_app = None
 
 mocap_timer = None
 
 # {key:object_name, value:{key:bone_name, value:[(time_delta, location, rotation_quaternion, scale)]}}
 record_data = None
+
+def init_mocap_api():
+    global mocap_app
+    mocap_app = MCPApplication()
+    render_settings = MCPRenderSettings()
+    render_settings.set_up_vector(MCPUpVector.ZAxis, 1)
+    render_settings.set_coord_system(MCPCoordSystem.RightHanded)
+    render_settings.set_front_vector(MCPFrontVector.ParityEven, -1)
+    render_settings.set_rotating_direction(MCPRotatingDirection.CounterClockwise)
+    render_settings.set_unit(MCPUnit.Meter)
+    mocap_app.set_render_settings(render_settings)
+
+def uninit_mocap_api():
+    global mocap_app
+    if mocap_app.is_opened():
+        mocap_app.close()
+    mocap_app = None
 
 def animate_bone(ctx, obj, parent_global_position, parent_rest_matrix_inv, parent_scalable, joint):
     obj_matrix = obj.matrix_world

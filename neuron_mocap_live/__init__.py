@@ -31,6 +31,8 @@ class_list = [
 ]
 
 def register():
+    ops.init_mocap_api()
+
     core.register_types()
 
     for item in class_list:
@@ -43,3 +45,5 @@ def unregister():
         bpy.utils.unregister_class(item)
 
     bpy.types.VIEW3D_MT_add.remove(ui.draw_add_armature_menu)
+
+    ops.uninit_mocap_api()
