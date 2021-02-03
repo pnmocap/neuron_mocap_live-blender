@@ -5,7 +5,7 @@ class ConnectionPanel(bpy.types.Panel):
     bl_label = 'Connection'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Neuron Mocap"
+    bl_category = "NEURON MOCAP"
 
     def draw(self, ctx):
         layout = self.layout

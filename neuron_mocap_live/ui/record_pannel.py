@@ -5,7 +5,7 @@ class RecordPanel(bpy.types.Panel):
     bl_label = 'Record'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Neuron Mocap"
+    bl_category = "NEURON MOCAP"
 
     @classmethod
     def poll(cls, ctx):

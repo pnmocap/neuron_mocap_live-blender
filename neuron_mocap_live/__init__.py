@@ -4,13 +4,15 @@ from . import ops
 from . import ui
 
 bl_info = {
-    "name" : "Neuron Mocap Live",
+    "name" : "NEURON MOCAP LIVE",
     "author" : "Noitom",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, 0),
+    "version" : (1, 0, '0 (BETA)'),
     "location" : "",
     "warning" : "",
+    "doc_url" : "https://github.com/pnmocap/neuron_mocap_live-blender",
+    "tracker_url" : "https://github.com/pnmocap/neuron_mocap_live-blender/issues",
     "category" : "Noitom"
 }
 
