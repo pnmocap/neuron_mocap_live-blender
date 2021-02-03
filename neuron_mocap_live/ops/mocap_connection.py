@@ -109,7 +109,7 @@ def animate_armatures_indirect(ctx, source_obj):
     for target_obj in bpy.data.objects:
         if not target_obj.nml_active:
             continue
-        if target_obj.type == 'ARMATURE' and target_obj.nml_source_armature == source_obj.name:
+        if target_obj.type == 'ARMATURE' and target_obj.nml_source_armature == source_obj.name and target_obj.nml_tpose_marked:
             for target_pose_bone in target_obj.pose.bones: 
                 source_pose_bone = source_obj.pose.bones.get(target_pose_bone.nml_source_bone)
                 if not source_pose_bone:
@@ -162,10 +162,11 @@ def animate_armatures(ctx, mcp_avatar):
         if not obj.nml_active:
             continue
         if obj.type == 'ARMATURE' and obj.nml_chr_name == mcp_avatar.get_name():
-            animate_bone(ctx, obj, Vector(), Matrix(), False, mcp_avatar.get_root_joint())
-            if ctx.scene.nml_recording:
-                record_frame(ctx, obj)
-            animate_armatures_indirect(ctx, obj)
+            if obj.nml_drive_type == 'DIRECT':
+                animate_bone(ctx, obj, Vector(), Matrix(), False, mcp_avatar.get_root_joint())
+                if ctx.scene.nml_recording:
+                    record_frame(ctx, obj)
+                animate_armatures_indirect(ctx, obj)
 
 def poll_data(ctx):
     mcp_evts = mocap_app.poll_next_event()

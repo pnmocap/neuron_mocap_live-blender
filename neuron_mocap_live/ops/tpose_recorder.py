@@ -27,6 +27,10 @@ class SetTPose(bpy.types.Operator):
     bl_idname = 'neuron_mocap_live.set_tpose'
     bl_label = 'Set T-Pose'
 
+    @classmethod
+    def poll(cls, ctx):
+        return ctx.active_object.nml_tpose_marked
+
     def execute(self, ctx):
         if ctx.active_object.nml_tpose_marked:
             for bone in ctx.active_object.pose.bones:

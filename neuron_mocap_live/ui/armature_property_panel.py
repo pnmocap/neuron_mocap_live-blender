@@ -58,6 +58,10 @@ class ArmaturePropertyPanel(bpy.types.Panel):
         row.operator('neuron_mocap_live.mark_tpose', text = 'Mark T-Pose', icon='OUTLINER_DATA_ARMATURE')
         row.operator('neuron_mocap_live.set_tpose', text = 'Set T-Pose', icon='ARMATURE_DATA')
 
+        if not ctx.active_object.nml_tpose_marked:
+            row = col.row(align = True)
+            row.label(text="Mark T-Pose is required", icon='ERROR')
+
         row = col.row()
         row.label(text='Source')
         row.prop_search(ctx.active_object, 'nml_source_armature', ctx.scene, 'objects', text='')
