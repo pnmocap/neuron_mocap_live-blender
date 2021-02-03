@@ -18,7 +18,11 @@ class MarkTPose(bpy.types.Operator):
             bone.nml_set_matrix_from_world(matrix_to_world.inverted())
             scale = matrix_world_tpose.to_scale()
             bone.nml_scale_world = scale
-            bone.nml_translation_world = matrix_world_tpose.to_quaternion() @ (matrix_world_tpose.to_translation() * scale)
+            translation = matrix_world_tpose.to_translation()
+            translation.x = translation.x * scale.x
+            translation.y = translation.y * scale.y
+            translation.z = translation.z * scale.z
+            bone.nml_translation_world = matrix_world_tpose.to_quaternion() @ translation
 
         ctx.active_object.nml_tpose_marked = True
         return {'FINISHED'}

@@ -128,7 +128,11 @@ def animate_armatures_indirect(ctx, source_obj):
                     source_pose_bone.nml_set_matrix_from_world(source_matrix_to_world.inverted())
                     scale = source_matrix_world.to_scale()
                     source_pose_bone.nml_scale_world = scale
-                    source_pose_bone.nml_translation_world = source_matrix_world.to_translation() * scale
+                    translation = source_matrix_world.to_translation()
+                    translation.x = translation.x * scale.x
+                    translation.y = translation.y * scale.y
+                    translation.z = translation.z * scale.z
+                    source_pose_bone.nml_translation_world = translation
                     source_pose_bone.nml_matrix_calculated = True
 
                 matrix_source_to_target = target_pose_bone.nml_get_matrix_to_world() @ source_pose_bone.nml_get_matrix_to_world().inverted()
