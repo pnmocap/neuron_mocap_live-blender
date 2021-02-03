@@ -36,11 +36,10 @@ This plugin provide the ability to stream motion data from Axis Studio into Blen
    ![](img/stream_04.png)
 
 4. Configure the live settings in **NEURON MOCAP** tab in sidebar in Blender
-   <br/>
+   
    - The **Server** settings within **Connection** catagory means how to parse stream data, if you want to animate **Axis Neuron(Pro)** armature, please switch the **Server** settings to **Axis Neuron / Pro**
-   <br/>
+
    - The **Drive Type** settings within **Armature** catagory means how to drive the active armature, under the **Direct** option, the motion data received will directly pass to armature 
-   <br/>
 
    ![](img/stream_05.png)
 
