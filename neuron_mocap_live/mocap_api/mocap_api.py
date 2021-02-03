@@ -498,8 +498,8 @@ MCPBvhData = namedtuple('EMCPBvhData', [
     'String',
     'BinaryWithOldFrameHeader',
     'Binary',
-    'LegacyHumanHierarchy'
-])(0, 1, 2, 4)
+    'BinaryLegacyHumanHierarchy'
+])(0, 1, 2, 6)
 
 MCPBvhDisplacement = namedtuple('EMCPBvhDisplacement', [
     'Disable',

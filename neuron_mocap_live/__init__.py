@@ -26,8 +26,8 @@ class_list = [
     ops.SetTPose,
     ops.AutoMapBone,
     ui.ConnectionPanel,
-    ui.ArmaturePropertyPanel,
-    ui.RecordPanel
+    ui.RecordPanel,
+    ui.ArmaturePropertyPanel
 ]
 
 def register():

@@ -13,6 +13,10 @@ class ConnectionPanel(bpy.types.Panel):
 
         if not ctx.scene.nml_living:
             row = col.row(align=True)
+            row.label(text = 'Server')
+            row.prop(ctx.scene, 'nml_server', text = '')
+
+            row = col.row(align=True)
             row.label(text = 'Protocol')
             row.prop(ctx.scene, 'nml_protocol', text = '')
 
@@ -28,6 +32,10 @@ class ConnectionPanel(bpy.types.Panel):
             row = col.row(align=True)
             row.operator('neuron_mocap_live.connect', icon='URL')
         else:
+            row = col.row(align=True)
+            row.label(text = 'Server')
+            row.label(text = ctx.scene.nml_server)
+
             row = col.row(align=True)
             row.label(text = 'Protocol')
             row.label(text = ctx.scene.nml_protocol)

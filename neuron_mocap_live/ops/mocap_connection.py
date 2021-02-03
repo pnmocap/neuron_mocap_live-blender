@@ -171,10 +171,17 @@ class MocapConnect(bpy.types.Operator):
     def execute(self, ctx):
         global mocap_timer
         settings = MCPSettings()
+
         if ctx.scene.nml_protocol == 'TCP':
             settings.set_tcp(ctx.scene.nml_ip, ctx.scene.nml_port)
         else:
             settings.set_udp(ctx.scene.nml_port)
+
+        if ctx.scene.nml_server == 'Axis Studio':
+            settings.set_bvh_data(MCPBvhData.Binary)
+        else:
+            settings.set_bvh_data(MCPBvhData.BinaryLegacyHumanHierarchy)
+
         mocap_app.set_settings(settings)
         status, msg = mocap_app.open()
         if status:

@@ -2,6 +2,12 @@ import bpy
 from mathutils import Matrix, Vector
 
 def register_types():
+    bpy.types.Scene.nml_server = bpy.props.EnumProperty(
+        items = [('Axis Studio', 'Axis Studio', '', 1), ('Axis Neuron / Pro', 'Axis Neruon / Pro', '', 2)], 
+        name = 'Server',
+        default = 'Axis Studio'
+    )
+
     bpy.types.Scene.nml_protocol = bpy.props.EnumProperty(
         items = [('TCP', 'TCP', '', 1), ('UDP', 'UDP', '', 2)], 
         name = 'Protocol',
