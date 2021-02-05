@@ -13,13 +13,18 @@ This plugin provide the ability to stream motion data from Axis Studio into Blen
 - Record motion data
 
 ## Installation
-1. Download the **neuron_mocap_live** folder, and copy it to your Blender addons path
+1. Download a release package from [release page](https://github.com/pnmocap/neuron_mocap_live-blender/releases)
 
    ![](img/install_01.png)
 
-2. Enable **Noitom:NEURON MOCAP LIVE** plugin in Blender
-   
+2. Insall plugin in Blender
+
    ![](img/install_02.png)
+   ![](img/install_03.png)
+
+3. Enable **Noitom:NEURON MOCAP LIVE** plugin in Blender
+   
+   ![](img/install_04.png)
 
 ## Live Motion Data (Direct)
 1. Add a **Axis Studio/Axis Studio - Thumb Open/Axis Neuron (Pro)** armature
