@@ -120,15 +120,18 @@ def animate_armatures_indirect(ctx, source_obj):
 
                 source_pose_bone.nml_matrix_calculated = False
                 if not source_pose_bone.nml_matrix_calculated:
-                    source_matrix_to_world = (source_pose_bone.bone.matrix_local.to_3x3().inverted() @ 
-                        source_obj.matrix_world.to_3x3().inverted()).to_4x4()
-                    source_matrix_world = source_pose_bone.bone.matrix_local @ source_obj.matrix_world
+                    source_matrix_to_world = (source_pose_bone.bone.matrix_local.to_quaternion().inverted() @ 
+                        source_obj.matrix_world.to_quaternion().inverted()).to_matrix().to_4x4()
 
                     source_pose_bone.nml_set_matrix_to_world(source_matrix_to_world)
                     source_pose_bone.nml_set_matrix_from_world(source_matrix_to_world.inverted())
-                    scale = source_matrix_world.to_scale()
+
+                    scale = source_obj.matrix_world.to_scale()
                     source_pose_bone.nml_scale_world = scale
-                    translation = source_matrix_world.to_translation()
+
+                    translation = source_obj.matrix_world.to_quaternion() @ source_pose_bone.bone.matrix_local.to_translation()
+                    translation = translation + source_obj.matrix_world.to_translation()
+
                     translation.x = translation.x * scale.x
                     translation.y = translation.y * scale.y
                     translation.z = translation.z * scale.z
@@ -138,6 +141,9 @@ def animate_armatures_indirect(ctx, source_obj):
                 matrix_source_to_target = target_pose_bone.nml_get_matrix_to_world() @ source_pose_bone.nml_get_matrix_to_world().inverted()
 
                 target_matrix_world = matrix_source_to_target @ source_pose_bone.matrix_basis @ source_pose_bone.nml_get_matrix_to_world()
+                target_matrix_world[0][3] = target_matrix_world[0][3] / target_pose_bone.nml_scale_world[0]
+                target_matrix_world[1][3] = target_matrix_world[1][3] / target_pose_bone.nml_scale_world[1]
+                target_matrix_world[2][3] = target_matrix_world[2][3] / target_pose_bone.nml_scale_world[2]
                 target_pose_bone.matrix_basis = target_matrix_world @ target_pose_bone.nml_get_matrix_from_world() @ target_pose_bone.nml_get_matrix_basis_tpose()
 
                 factor = 1

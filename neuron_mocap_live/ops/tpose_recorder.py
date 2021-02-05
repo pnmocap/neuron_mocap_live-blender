@@ -12,17 +12,22 @@ class MarkTPose(bpy.types.Operator):
             matrix_world_tpose = bone.matrix @ ctx.active_object.matrix_world
             bone.nml_set_matrix_world_tpose(matrix_world_tpose)
 
-            matrix_to_world = (bone.matrix.to_3x3().inverted() @ ctx.active_object.matrix_world.to_3x3().inverted()).to_4x4()
+            matrix_to_world = (bone.matrix.to_quaternion().inverted() @ ctx.active_object.matrix_world.to_quaternion().inverted()).to_matrix().to_4x4()
             bone.nml_set_matrix_to_world(matrix_to_world)
             
             bone.nml_set_matrix_from_world(matrix_to_world.inverted())
-            scale = matrix_world_tpose.to_scale()
+
+            scale = ctx.active_object.matrix_world.to_scale()
             bone.nml_scale_world = scale
-            translation = matrix_world_tpose.to_translation()
+
+            translation = bone.bone.matrix_local.to_quaternion() @ matrix_basis_tpose.to_translation()
+            translation = ctx.active_object.matrix_world.to_quaternion() @ (bone.bone.matrix_local.to_translation() + translation)
+            translation = ctx.active_object.matrix_world.to_translation() + translation
+
             translation.x = translation.x * scale.x
             translation.y = translation.y * scale.y
             translation.z = translation.z * scale.z
-            bone.nml_translation_world = matrix_world_tpose.to_quaternion() @ translation
+            bone.nml_translation_world = translation
 
         ctx.active_object.nml_tpose_marked = True
         return {'FINISHED'}
