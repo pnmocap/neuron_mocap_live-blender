@@ -22,7 +22,6 @@ class MarkTPose(bpy.types.Operator):
 
             translation = bone.bone.matrix_local.to_quaternion() @ matrix_basis_tpose.to_translation()
             translation = ctx.active_object.matrix_world.to_quaternion() @ (bone.bone.matrix_local.to_translation() + translation)
-            translation = ctx.active_object.matrix_world.to_translation() + translation
 
             translation.x = translation.x * scale.x
             translation.y = translation.y * scale.y

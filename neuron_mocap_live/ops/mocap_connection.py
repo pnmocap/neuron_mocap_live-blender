@@ -27,30 +27,41 @@ def uninit_mocap_api():
         mocap_app.close()
     mocap_app = None
 
-def animate_bone(ctx, obj, parent_global_position, parent_rest_matrix_inv, parent_scalable, joint):
-    obj_matrix = obj.matrix_world
+def animate_bone(ctx, obj, obj_translation, obj_quaternion, obj_scale, parent_rest_translation_world, parent_rest_matrix_from_world, parent_scalable, joint):
     parent_scale = Vector((1, 1, 1))
     pose_bone = obj.pose.bones.get(joint.get_name())
-    rest_matrix = Matrix()
-    rest_matrix_inv = Matrix()
+    rest_matrix_to_world = Matrix()
+    rest_matrix_from_world = Matrix()
+    rest_translation_world = Vector()
 
     if pose_bone != None:
         bone = obj.data.bones.get(joint.get_name())
         bone.inherit_scale = 'NONE'
 
-        rest_matrix = obj_matrix @ bone.matrix_local
-        rest_matrix_inv = Matrix(rest_matrix).to_3x3()
-        rest_matrix_inv.invert()
-        rest_matrix_inv.resize_4x4()
+        rest_matrix_to_world = (bone.matrix_local.to_quaternion() @ obj_quaternion).to_matrix().to_4x4()
+        rest_matrix_from_world = rest_matrix_to_world.inverted()
+        rest_translation_world = obj_quaternion @ bone.matrix_local.to_translation()
+        rest_translation_world.x = rest_translation_world.x * obj_scale.x
+        rest_translation_world.y = rest_translation_world.y * obj_scale.y
+        rest_translation_world.z = rest_translation_world.z * obj_scale.z
 
         location = joint.get_local_position()
         if location:
-            location_in_parent_coord = parent_rest_matrix_inv @ Vector(location)
-            location = rest_matrix_inv @ Vector(location)
+            location = Vector(location)
+            location.x = location.x / obj_scale.x
+            location.y = location.y / obj_scale.y
+            location.z = location.z / obj_scale.z
 
-            ofs = rest_matrix.to_translation() - parent_global_position
-            ofs_in_parent_coord = parent_rest_matrix_inv @ ofs
-            ofs = rest_matrix_inv @ ofs
+            location_in_parent_coord = parent_rest_matrix_from_world @ location
+            location = rest_matrix_from_world @ location
+
+            ofs = rest_translation_world - parent_rest_translation_world
+            ofs.x = ofs.x / obj_scale.x
+            ofs.y = ofs.y / obj_scale.y
+            ofs.z = ofs.z / obj_scale.z
+
+            ofs_in_parent_coord = parent_rest_matrix_from_world @ ofs
+            ofs = rest_matrix_to_world.inverted() @ ofs
 
             if pose_bone.parent and parent_scalable:
                 for i in range(3):
@@ -71,10 +82,7 @@ def animate_bone(ctx, obj, parent_global_position, parent_rest_matrix_inv, paren
         if pose_bone.rotation_mode != 'QUATERNION':
             pose_bone.rotation_mode = 'QUATERNION'
 
-        rot_matrix = Quaternion(joint.get_local_rotation()).to_matrix()
-        rot_matrix.resize_4x4()
-        rot_matrix = rest_matrix_inv @ rot_matrix @ rest_matrix
-        rotation_quaternion = rot_matrix.to_quaternion()
+        rotation_quaternion = rest_matrix_from_world.to_quaternion() @ Quaternion(joint.get_local_rotation()) @ rest_matrix_to_world.to_quaternion()
         for i in range(3):
             if not pose_bone.lock_rotation[i]:
                 pose_bone.rotation_quaternion[i + 1] = rotation_quaternion[i + 1]
@@ -86,7 +94,7 @@ def animate_bone(ctx, obj, parent_global_position, parent_rest_matrix_inv, paren
     children = joint.get_children()
     scalable = (pose_bone != None) and (len(children) == 1)
     for child in children:
-        scale = animate_bone(ctx, obj, rest_matrix.to_translation(), rest_matrix_inv, scalable, child)
+        scale = animate_bone(ctx, obj, obj_translation, obj_quaternion, obj_scale, rest_translation_world, rest_matrix_from_world, scalable, child)
 
     if scalable:
         for i in range(3):
@@ -130,7 +138,6 @@ def animate_armatures_indirect(ctx, source_obj):
                     source_pose_bone.nml_scale_world = scale
 
                     translation = source_obj.matrix_world.to_quaternion() @ source_pose_bone.bone.matrix_local.to_translation()
-                    translation = translation + source_obj.matrix_world.to_translation()
 
                     translation.x = translation.x * scale.x
                     translation.y = translation.y * scale.y
@@ -173,7 +180,8 @@ def animate_armatures(ctx, mcp_avatar):
             continue
         if obj.type == 'ARMATURE' and obj.nml_chr_name == mcp_avatar.get_name():
             if obj.nml_drive_type == 'DIRECT':
-                animate_bone(ctx, obj, Vector(), Matrix(), False, mcp_avatar.get_root_joint())
+                obj_translation, obj_quaternion, obj_scale = obj.matrix_world.decompose()
+                animate_bone(ctx, obj, obj_translation, obj_quaternion, obj_scale, Vector(), Matrix(), False, mcp_avatar.get_root_joint())
                 if ctx.scene.nml_recording:
                     record_frame(ctx, obj)
                 animate_armatures_indirect(ctx, obj)
