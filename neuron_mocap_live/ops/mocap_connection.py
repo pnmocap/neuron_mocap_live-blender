@@ -117,7 +117,7 @@ def animate_armatures_indirect(ctx, source_obj):
     for target_obj in bpy.data.objects:
         if not target_obj.nml_active:
             continue
-        if target_obj.type == 'ARMATURE' and target_obj.nml_source_armature == source_obj.name and target_obj.nml_tpose_marked:
+        if target_obj.type == 'ARMATURE' and target_obj.nml_drive_type == 'RETARGET' and target_obj.nml_source_armature == source_obj.name and target_obj.nml_tpose_marked:
             for target_pose_bone in target_obj.pose.bones: 
                 source_pose_bone = source_obj.pose.bones.get(target_pose_bone.nml_source_bone)
                 if not source_pose_bone:
@@ -147,29 +147,30 @@ def animate_armatures_indirect(ctx, source_obj):
 
                 matrix_source_to_target = target_pose_bone.nml_get_matrix_to_world() @ source_pose_bone.nml_get_matrix_to_world().inverted()
 
-                target_matrix_world = matrix_source_to_target @ source_pose_bone.matrix_basis @ source_pose_bone.nml_get_matrix_to_world()
-                target_matrix_world[0][3] = target_matrix_world[0][3] / target_pose_bone.nml_scale_world[0]
-                target_matrix_world[1][3] = target_matrix_world[1][3] / target_pose_bone.nml_scale_world[1]
-                target_matrix_world[2][3] = target_matrix_world[2][3] / target_pose_bone.nml_scale_world[2]
+                source_matrix_world = source_pose_bone.matrix_basis @ source_pose_bone.nml_get_matrix_to_world()
+                target_matrix_world = matrix_source_to_target @ source_matrix_world
                 target_pose_bone.matrix_basis = target_matrix_world @ target_pose_bone.nml_get_matrix_from_world() @ target_pose_bone.nml_get_matrix_basis_tpose()
+                target_pose_bone.matrix_basis = target_pose_bone.matrix_basis.to_quaternion().to_matrix().to_4x4()
 
-                factor = 1
                 if source_pose_bone.name == 'Hips':
-                    factor = target_pose_bone.nml_get_translation_world().z / source_pose_bone.nml_get_translation_world().z
-                else:
-                    target_translation = target_pose_bone.nml_get_translation_world()
-                    target_parent_translation = target_pose_bone.parent.nml_get_translation_world()
-                    target_length = (target_translation - target_parent_translation).length
+                    up_leg_pose_bone = source_obj.pose.bones.get('LeftUpLeg')
+                    leg_pose_bone = source_obj.pose.bones.get('LeftLeg')
+                    left_foot_bone = source_obj.pose.bones.get('LeftFoot')
+                    hip_height = up_leg_pose_bone.vector.length + leg_pose_bone.vector.length + leg_pose_bone.location.length + \
+                        left_foot_bone.bone.vector.y + left_foot_bone.location.length
 
-                    source_translation = source_pose_bone.nml_get_translation_world()
-                    source_parent_translation = source_pose_bone.parent.nml_get_translation_world()
-                    source_length = (source_translation - source_parent_translation).length
-
-                    factor = target_length / source_length
-
-                target_pose_bone.matrix_basis[0][3] = target_pose_bone.matrix_basis[0][3] * factor
-                target_pose_bone.matrix_basis[1][3] = target_pose_bone.matrix_basis[1][3] * factor
-                target_pose_bone.matrix_basis[2][3] = target_pose_bone.matrix_basis[2][3] * factor
+                    factor = target_pose_bone.nml_get_translation_world().z / hip_height
+                    translation = source_pose_bone.nml_get_matrix_from_world() @ source_matrix_world.to_translation()
+                    for i in range(3):
+                        translation[i] = translation[i] * source_pose_bone.nml_scale_world[i]
+                    translation[0] = translation[0] * factor
+                    translation[1] = translation[1] * factor
+                    translation[2] = (translation[2] + source_pose_bone.nml_translation_world[2]) * factor - target_pose_bone.nml_translation_world[2]
+                    for i in range(3):
+                        translation[i] = translation[i] / target_pose_bone.nml_scale_world[i]
+                    translation = target_pose_bone.nml_get_matrix_to_world() @ translation
+                    for i in range(3):
+                        target_pose_bone.matrix_basis[i][3] = translation[i]
 
             if ctx.scene.nml_recording:
                 record_frame(ctx, target_obj)
