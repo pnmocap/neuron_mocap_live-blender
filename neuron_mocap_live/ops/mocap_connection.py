@@ -213,6 +213,8 @@ class MocapConnect(bpy.types.Operator):
             settings.set_bvh_data(MCPBvhData.BinaryLegacyHumanHierarchy)
 
         mocap_app.set_settings(settings)
+        if mocap_app.is_opened() :
+            mocap_app.close()
         status, msg = mocap_app.open()
         if status:
             ctx.scene.nml_living = True
