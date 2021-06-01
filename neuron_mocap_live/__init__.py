@@ -8,7 +8,7 @@ bl_info = {
     "author" : "Noitom",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, '0 (BETA)'),
+    "version" : (1, 0, '0 (BETA2)'),
     "location" : "",
     "warning" : "",
     "doc_url" : "https://github.com/pnmocap/neuron_mocap_live-blender",
@@ -27,6 +27,9 @@ class_list = [
     ops.MarkTPose,
     ops.SetTPose,
     ops.AutoMapBone,
+    ops.ClearBoneMap,
+    ops.LoadBoneMap,
+    ops.SaveBoneMap,
     ui.ConnectionPanel,
     ui.RecordPanel,
     ui.ArmaturePropertyPanel

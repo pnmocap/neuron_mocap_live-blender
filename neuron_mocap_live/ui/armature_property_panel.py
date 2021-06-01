@@ -71,6 +71,12 @@ class ArmaturePropertyPanel(bpy.types.Panel):
             col = layout.column()
             row = col.row()
             row.operator('neuron_mocap_live.auto_map_bone', text = 'Auto Detect', icon='BONE_DATA')
+            row = col.row()
+            row.operator('neuron_mocap_live.clear_bone_map', text = 'Clear', icon='PANEL_CLOSE')
+            row = col.row()
+            row.operator('neuron_mocap_live.load_bone_map', text = 'Load', icon='FILEBROWSER')
+            row = col.row()
+            row.operator('neuron_mocap_live.save_bone_map', text = 'Save', icon='FILE_TICK')
 
             for bone in ctx.active_object.pose.bones:
                 row = col.row()
