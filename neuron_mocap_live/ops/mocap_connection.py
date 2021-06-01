@@ -78,6 +78,11 @@ def animate_bone(ctx, obj, obj_translation, obj_quaternion, obj_scale, parent_re
             for i in range(3):
                 if not pose_bone.lock_location[i]:
                     pose_bone.location[i] = location[i]
+        else:
+            for i in range(3):
+                if not pose_bone.lock_location[i]:
+                    pose_bone.location[i] = 0
+
 
         if pose_bone.rotation_mode != 'QUATERNION':
             pose_bone.rotation_mode = 'QUATERNION'
@@ -100,6 +105,10 @@ def animate_bone(ctx, obj, obj_translation, obj_quaternion, obj_scale, parent_re
         for i in range(3):
             if not pose_bone.lock_scale[i]:
                 pose_bone.scale[i] = scale[i]
+    else:
+        for i in range(3):
+            if not pose_bone.lock_scale[i]:
+                pose_bone.scale[i] = 1
 
     return parent_scale
 
