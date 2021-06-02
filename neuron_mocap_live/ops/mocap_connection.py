@@ -105,9 +105,7 @@ def animate_bone(ctx, obj, obj_translation, obj_quaternion, obj_scale, parent_re
         for i in range(3):
             if not pose_bone.lock_scale[i]:
                 pose_bone.scale[i] = scale[i]
-    else:
-        for i in range(3):
-            if not pose_bone.lock_scale[i]:
+            else:
                 pose_bone.scale[i] = 1
 
     return parent_scale
