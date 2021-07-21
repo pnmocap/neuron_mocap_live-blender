@@ -13,6 +13,7 @@ record_data = None
 def init_mocap_api():
     global mocap_app
     mocap_app = MCPApplication()
+    mocap_app.enable_event_cache()
     render_settings = MCPRenderSettings()
     render_settings.set_up_vector(MCPUpVector.ZAxis, 1)
     render_settings.set_coord_system(MCPCoordSystem.RightHanded)

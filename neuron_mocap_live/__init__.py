@@ -8,7 +8,7 @@ bl_info = {
     "author" : "Noitom",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, '2 (BETA)'),
+    "version" : (1, 0, '3 (BETA)'),
     "location" : "",
     "warning" : "",
     "doc_url" : "https://github.com/pnmocap/neuron_mocap_live-blender",
