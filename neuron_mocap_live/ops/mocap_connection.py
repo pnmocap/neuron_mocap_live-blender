@@ -126,7 +126,7 @@ def animate_armatures_indirect(ctx, source_obj):
             continue
         if target_obj.type == 'ARMATURE' and target_obj.nml_drive_type == 'RETARGET' and target_obj.nml_source_armature == source_obj.name and target_obj.nml_tpose_marked:
             for target_pose_bone in target_obj.pose.bones: 
-                source_pose_bone = source_obj.pose.bones.get(target_pose_bone.nml_source_bone)
+                source_pose_bone = source_obj.pose.bones.get(target_pose_bone.bone.nml_source_bone)
                 if not source_pose_bone:
                     continue
                 target_pose_bone.bone.inherit_scale = 'NONE'

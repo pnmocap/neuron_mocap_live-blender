@@ -56,7 +56,7 @@ def register_types():
         name = 'Armature Source'
     )
 
-    bpy.types.PoseBone.nml_source_bone = bpy.props.StringProperty(
+    bpy.types.Bone.nml_source_bone = bpy.props.StringProperty(
         name = 'Bone Source'
     )
 

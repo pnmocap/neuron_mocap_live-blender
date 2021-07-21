@@ -23,9 +23,9 @@ class LoadBoneMap(bpy.types.Operator, ImportHelper):
 		for bone in ctx.active_object.pose.bones:
 			value = bone_map.get(bone.name)
 			if value:
-				bone.nml_source_bone = value
+				bone.bone.nml_source_bone = value
 			else:
-				bone.nml_source_bone = str()
+				bone.bone.nml_source_bone = str()
 		return {'FINISHED'}
 
 class SaveBoneMap(bpy.types.Operator, ExportHelper):
@@ -46,8 +46,8 @@ class SaveBoneMap(bpy.types.Operator, ExportHelper):
 	def execute(self, ctx):
 		bone_map = dict()
 		for bone in ctx.active_object.pose.bones:
-			if bone.nml_source_bone and len(bone.nml_source_bone) > 0:
-				bone_map[bone.name] = bone.nml_source_bone
+			if bone.bone.nml_source_bone and len(bone.bone.nml_source_bone) > 0:
+				bone_map[bone.name] = bone.bone.nml_source_bone
 		with open(self.filepath, 'w') as f:
 			f.write(json.dumps(bone_map, indent=4))
 			f.close()
