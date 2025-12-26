@@ -49,6 +49,5 @@ class ConnectionPanel(bpy.types.Panel):
             row.label(text = 'Port')
             row.label(text = str(ctx.scene.nml_port))
 
-            if not ctx.scene.nml_recording:
-                row = col.row(align=True)
-                row.operator('neuron_mocap_live.disconnect', icon='MOD_WAVE')
+            row = col.row(align=True)
+            row.operator('neuron_mocap_live.disconnect', icon='UNLINKED')

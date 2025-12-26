@@ -18,6 +18,21 @@ class RecordPanel(bpy.types.Panel):
         if not ctx.scene.nml_recording:
             row = col.row(align=True)
             row.operator('neuron_mocap_live.start_record', icon='REC')
+            
+            # 显示已保存的动画信息
+            col.separator()
+            saved_actions = []
+            for obj in bpy.data.objects:
+                if obj.type == 'ARMATURE' and obj.animation_data and obj.animation_data.action:
+                    action_name = obj.animation_data.action.name
+                    if action_name.startswith('mocap_'):
+                        saved_actions.append((obj.name, action_name))
+            
+            if saved_actions:
+                col.label(text="已保存的动画:", icon='ACTION')
+                for obj_name, action_name in saved_actions:
+                    row = col.row(align=True)
+                    row.label(text=f"  {obj_name}: {action_name}", icon='ARMATURE_DATA')
         else:
             row = col.row(align=True)
             row.operator('neuron_mocap_live.stop_record', icon='REC', depress=True)

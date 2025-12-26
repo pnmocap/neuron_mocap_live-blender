@@ -14,7 +14,7 @@ class AutoMapBone(bpy.types.Operator):
         for bone in bones:
             for source_bone in source_bones:
                 if bone.name.endswith(source_bone.name):
-                    bone.bone.nml_source_bone = source_bone.name
+                    bone.nml_source_bone = source_bone.name
 
         return {'FINISHED'}
 
@@ -30,6 +30,6 @@ class ClearBoneMap(bpy.types.Operator):
         bones = ctx.active_object.pose.bones
         source_bones = bpy.data.objects.get(ctx.active_object.nml_source_armature).pose.bones
         for bone in bones:
-            bone.bone.nml_source_bone = str()
+            bone.nml_source_bone = str()
 
         return {'FINISHED'}

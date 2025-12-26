@@ -13,7 +13,6 @@ record_data = None
 def init_mocap_api():
     global mocap_app
     mocap_app = MCPApplication()
-    mocap_app.enable_event_cache()
     render_settings = MCPRenderSettings()
     render_settings.set_up_vector(MCPUpVector.ZAxis, 1)
     render_settings.set_coord_system(MCPCoordSystem.RightHanded)
@@ -127,7 +126,7 @@ def animate_armatures_indirect(ctx, source_obj):
             continue
         if target_obj.type == 'ARMATURE' and target_obj.nml_drive_type == 'RETARGET' and target_obj.nml_source_armature == source_obj.name and target_obj.nml_tpose_marked:
             for target_pose_bone in target_obj.pose.bones: 
-                source_pose_bone = source_obj.pose.bones.get(target_pose_bone.bone.nml_source_bone)
+                source_pose_bone = source_obj.pose.bones.get(target_pose_bone.nml_source_bone)
                 if not source_pose_bone:
                     continue
                 target_pose_bone.bone.inherit_scale = 'NONE'
@@ -273,9 +272,53 @@ class MocapStartRecord(bpy.types.Operator):
 
 def save_animation_data(ctx, obj, bones_data):
     obj.animation_data_create()
-    action = bpy.data.actions.new(name='mocap')
+    # 创建唯一的动作名称，包含对象名称和时间戳（精确到分钟）
+    import datetime
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    action_name = f'mocap_{obj.name}_{timestamp}'
+    action = bpy.data.actions.new(name=action_name)
     obj.animation_data.action = action
+    
+    # Blender 5.0+ 使用插槽动作系统
+    # 确保 action 有插槽
+    if not action.slots:
+        action.slots.new(id_type='OBJECT', name=obj.name)
+    slot = action.slots[0]
+    
+    # 计算总帧数和总时间（先计算，用于设置条带范围）
     dt = 1 / ctx.scene.render.fps
+    max_frame = 1
+    for bone in obj.pose.bones:
+        bone_data = bones_data.get(bone.name)
+        if bone_data == None:
+            continue
+        frame_time = 0.0
+        for frame_data in bone_data:
+            frame_time = frame_time + frame_data[0]
+        frame_num = int(math.ceil(frame_time / dt)) + 1
+        if frame_num > max_frame:
+            max_frame = frame_num
+    
+    # 确保有图层和条带
+    if not action.layers:
+        layer = action.layers.new(name="Layer")
+        strip = layer.strips.new(type='KEYFRAME')
+    else:
+        layer = action.layers[0]
+        if not layer.strips:
+            strip = layer.strips.new(type='KEYFRAME')
+        else:
+            strip = layer.strips[0]
+    
+    # 设置条带的时间范围
+    if hasattr(strip, 'frame_start'):
+        strip.frame_start = 1
+    if hasattr(strip, 'frame_end'):
+        strip.frame_end = max_frame
+    
+    # 获取通道包
+    channelbag = strip.channelbag(slot, ensure=True)
+    
     for bone in obj.pose.bones:
         bone_data = bones_data.get(bone.name)
         if bone_data == None:
@@ -283,49 +326,63 @@ def save_animation_data(ctx, obj, bones_data):
 
         data_path = 'pose.bones["%s"].location' % bone.name
         for axis_i in range(3):
-            curve = action.fcurves.new(data_path = data_path, index = axis_i)
+            curve = channelbag.fcurves.new(data_path = data_path, index = axis_i)
             keyframe_points = curve.keyframe_points
             frame_count = len(bone_data)
             keyframe_points.add(frame_count)
-            frame_time = 0
+            frame_time = 0.0
             for frame_i in range(frame_count):
+                frame_time = frame_time + bone_data[frame_i][0]
+                frame_number = round(frame_time / dt) + 1
                 keyframe_points[frame_i].co = (
-                    frame_time / dt + 1,
+                    frame_number,
                     bone_data[frame_i][1][axis_i]
                 )
-                frame_time = frame_time + bone_data[frame_i][0]
 
         data_path = 'pose.bones["%s"].rotation_quaternion' % bone.name
         for axis_i in range(4):
-            curve = action.fcurves.new(data_path = data_path, index = axis_i)
+            curve = channelbag.fcurves.new(data_path = data_path, index = axis_i)
             keyframe_points = curve.keyframe_points
             frame_count = len(bone_data)
             keyframe_points.add(frame_count)
-            frame_time = 0
+            frame_time = 0.0
             for frame_i in range(frame_count):
+                frame_time = frame_time + bone_data[frame_i][0]
+                frame_number = round(frame_time / dt) + 1
                 keyframe_points[frame_i].co = (
-                    frame_time / dt + 1,
+                    frame_number,
                     bone_data[frame_i][2][axis_i]
                 )
-                frame_time = frame_time + bone_data[frame_i][0]
 
         data_path = 'pose.bones["%s"].scale' % bone.name
         for axis_i in range(3):
-            curve = action.fcurves.new(data_path = data_path, index = axis_i)
+            curve = channelbag.fcurves.new(data_path = data_path, index = axis_i)
             keyframe_points = curve.keyframe_points
             frame_count = len(bone_data)
             keyframe_points.add(frame_count)
-            frame_time = 0
+            frame_time = 0.0
             for frame_i in range(frame_count):
+                frame_time = frame_time + bone_data[frame_i][0]
+                frame_number = round(frame_time / dt) + 1
                 keyframe_points[frame_i].co = (
-                    frame_time / dt + 1,
+                    frame_number,
                     bone_data[frame_i][3][axis_i]
                 )
-                frame_time = frame_time + bone_data[frame_i][0]
 
-    for cu in action.fcurves:
+    # 设置插值模式为线性
+    for cu in channelbag.fcurves:
         for bez in cu.keyframe_points:
             bez.interpolation = 'LINEAR'
+    
+    # 确保动作正确关联并设置场景帧范围
+    obj.animation_data.action = action
+    if max_frame > 1:
+        ctx.scene.frame_start = 1
+        ctx.scene.frame_end = max_frame
+        # 如果正在实时连接，不设置当前帧，避免触发动画应用导致与实时数据冲突
+        # 实时数据会持续更新骨骼，如果同时应用动画数据会导致闪烁
+        if not ctx.scene.nml_living:
+            ctx.scene.frame_set(1)
 
 class MocapStopRecord(bpy.types.Operator):
     bl_idname = 'neuron_mocap_live.stop_record'

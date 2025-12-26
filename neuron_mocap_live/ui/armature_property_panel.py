@@ -79,8 +79,6 @@ class ArmaturePropertyPanel(bpy.types.Panel):
             row.operator('neuron_mocap_live.save_bone_map', text = 'Save', icon='FILE_TICK')
 
             for bone in ctx.active_object.pose.bones:
-                if bone.bone.hide:
-                    continue
                 row = col.row()
                 row.label(text = bone.name)
-                row.prop_search(bone.bone, 'nml_source_bone', source.pose, 'bones', text='')
+                row.prop_search(bone, 'nml_source_bone', source.pose, 'bones', text='')
